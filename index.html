@@ -1,101 +1,458 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trad Wife y redes sociales | Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-:root{--bg:#f5f2ee;--surface:#fff;--text:#27221f;--muted:#746c66;--primary:#8c4f3f;--secondary:#d7b8a8;--accent:#c8875b;--dark:#403631;--border:#e6ddd7}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
-.container{width:min(1200px,92%);margin:0 auto}
-header{background:linear-gradient(135deg,rgba(64,54,49,.96),rgba(140,79,63,.94));color:#fff;padding:70px 0;margin-bottom:35px}
-.tag{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:7px 14px;border-radius:30px;font-size:.8rem;margin-bottom:20px;letter-spacing:.5px}
-h1{font-size:clamp(2rem,5vw,4.3rem);line-height:1.05;max-width:900px;margin-bottom:22px}
-.subtitle{max-width:850px;font-size:clamp(1rem,2vw,1.25rem);color:rgba(255,255,255,.85)}
-.section-title{margin-bottom:25px}.section-title h2{font-size:1.7rem;margin-bottom:8px}.section-title p{color:var(--muted)}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:45px}
-.kpi,.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 8px 25px rgba(0,0,0,.04)}
-.kpi-label{font-size:.85rem;color:var(--muted);margin-bottom:10px}.kpi-value{font-size:2rem;font-weight:bold;color:var(--primary)}
-.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:25px;margin-bottom:45px}
-.chart-card{border-radius:18px}.chart-card h3{margin-bottom:8px;font-size:1.15rem}.chart-card p{color:var(--muted);font-size:.9rem;margin-bottom:20px;min-height:45px}
-.chart-container{position:relative;height:330px}
-.analysis{background:var(--dark);color:#fff;border-radius:20px;padding:40px;margin-bottom:50px}.analysis h2{margin-bottom:20px;font-size:1.7rem}
-.analysis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:25px}.analysis-item{background:rgba(255,255,255,.08);padding:22px;border-radius:14px}.analysis-item h3{color:#f0c7a8;margin-bottom:10px}.analysis-item p{color:rgba(255,255,255,.82);font-size:.95rem}
-footer{padding:30px 0 45px;color:var(--muted);text-align:center;font-size:.9rem}
-@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.analysis-grid{grid-template-columns:1fr}}
-@media(max-width:550px){header{padding:50px 0}.kpis{grid-template-columns:1fr}.chart-card{padding:18px}.chart-container{height:300px}.analysis{padding:25px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trad Wife y Redes Sociales - Dashboard</title>
+
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#fdf4f5', 100: '#fbe8eb', 500: '#e11d48', 800: '#881337', 900: '#4c0519' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- PapaParse & Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #e11d48;
+      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body>
-<header><div class="container">
-<div class="tag">INVESTIGACIÓN · TRAD WIFE Y REDES SOCIALES</div>
-<h1>La mujer tradicional en el siglo XXI</h1>
-<p class="subtitle">Un análisis exploratorio sobre la circulación de discursos tradicionales de género en las redes sociales, el fenómeno Trad Wife y la influencia de las plataformas digitales en la construcción de nuevas representaciones sobre la familia, la maternidad y el rol de la mujer.</p>
-</div></header>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
-<main class="container">
-<section class="section-title">
-<h2>Una mirada sobre la muestra</h2>
-<p>El siguiente dashboard organiza las respuestas obtenidas para observar cómo las personas conocen, consumen e interpretan los contenidos vinculados al fenómeno Trad Wife y a los roles tradicionales de género.</p>
-</section>
+  <!-- Estado de Carga -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+    <div class="loader"></div>
+    <p class="text-slate-700 font-medium text-lg">Cargando y procesando hojas de cálculo...</p>
+    <p class="text-slate-400 text-sm">Consultando hojas de datos socioeconómicos y encuestas</p>
+  </div>
 
-<section class="kpis">
-<article class="kpi"><div class="kpi-label">Personas encuestadas</div><div class="kpi-value" id="totalResponses">0</div></article>
-<article class="kpi"><div class="kpi-label">Conoce qué es una Trad Wife</div><div class="kpi-value" id="knowsTradwife">0%</div></article>
-<article class="kpi"><div class="kpi-label">Consume contenido tradicional</div><div class="kpi-value" id="consumesContent">0%</div></article>
-<article class="kpi"><div class="kpi-label">Cree que el contenido repetido influye</div><div class="kpi-value" id="contentInfluence">0%</div></article>
-</section>
+  <!-- Header Principal -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Trad wife y redes sociales</h1>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">
+            Estudio Sociocultural y Contextual
+          </span>
+        </div>
+        
+        <!-- Integrantes -->
+        <p class="text-xs sm:text-sm font-semibold tracking-wider text-rose-700 uppercase">
+          Investigadoras: CLARA SEQUEIRA, NICOLE MORENO, ERIKA JOHNSON, VALENTINA AILÉN ACEVEDO
+        </p>
 
-<section class="charts-grid">
-<article class="chart-card"><h3>¿Qué edad tienen las personas encuestadas?</h3><p>Distribución etaria de la muestra.</p><div class="chart-container"><canvas id="ageChart"></canvas></div></article>
-<article class="chart-card"><h3>Conocimiento sobre el fenómeno Trad Wife</h3><p>¿Las personas encuestadas saben qué significa el concepto?</p><div class="chart-container"><canvas id="knowledgeChart"></canvas></div></article>
-<article class="chart-card"><h3>¿Cómo llega este contenido a las personas?</h3><p>Principales formas de descubrimiento del contenido vinculado a estilos de vida tradicionales.</p><div class="chart-container"><canvas id="discoveryChart"></canvas></div></article>
-<article class="chart-card"><h3>Redes sociales, algoritmos e influencia</h3><p>Percepción sobre la capacidad de las plataformas para repetir contenidos e influir en las opiniones.</p><div class="chart-container"><canvas id="influenceChart"></canvas></div></article>
-</section>
+        <!-- Bajada / Planteamiento del problema -->
+        <p class="text-sm sm:text-base text-slate-600 leading-relaxed mt-2 border-l-4 border-rose-500 pl-4 py-1 bg-slate-50 rounded-r">
+          Con el surgimiento de los valores tradicionales y el auge del fenómeno Tradwife en las redes sociales en Estados Unidos, este trabajo aborda el problema enfocándose en los discursos conservadores como un espacio donde se reivindican roles de género y la división tradicional de tareas. En este contexto, indagamos: <em>¿qué significa ser una mujer tradicional en el siglo XXI y cómo influyen las redes sociales en la difusión y resignificación de estos roles de género?</em>
+        </p>
+      </div>
+    </div>
+  </header>
 
-<section class="analysis">
-<h2>¿Qué nos permiten observar estos datos?</h2>
-<div class="analysis-grid">
-<article class="analysis-item"><h3>Visibilidad</h3><p>El fenómeno Trad Wife aparece dentro de los consumos cotidianos de redes sociales y permite observar cómo discursos tradicionales pueden circular en plataformas utilizadas diariamente.</p></article>
-<article class="analysis-item"><h3>Algoritmos</h3><p>La presencia del algoritmo como vía de descubrimiento permite pensar que la exposición al contenido no siempre surge de una búsqueda intencional, sino también de las recomendaciones de las plataformas.</p></article>
-<article class="analysis-item"><h3>Resignificación</h3><p>Los resultados permiten analizar la tensión entre la elección individual de un estilo de vida tradicional y la posibilidad de que estas representaciones refuercen modelos de género presentados como ideales.</p></article>
-</div>
-</section>
-</main>
+  <!-- Contenido Central -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-10">
 
-<footer><div class="container">Dashboard exploratorio sobre Trad Wife, roles de género y redes sociales.</div></footer>
+    <!-- Sección 1: Indicadores Clave (KPIs) -->
+    <section>
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-slate-900">1. Indicadores Generales de Muestra y Contexto</h2>
+        <p class="text-xs text-slate-500">Métricas cuantitativas consolidadas a partir de las 4 fuentes analizadas.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <!-- KPI 1 -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Respuestas Modo Clásico</div>
+            <div id="kpi-encuesta-1" class="text-3xl font-bold text-slate-800 mt-2">--</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+            <strong>Fuente:</strong> Hoja "MODO CLÁSICO" (gid=950326911)
+          </div>
+        </div>
 
-<script>
-const responses=[
-{timestamp:"30/8/2026 17:15:00",age:"18 a 24 años",gender:"Mujer",frequency:"Diariamente",socialNetwork:"Instagram",knowsTradwife:"Si",associatedIdeas:["Una mujer dedicada principalmente al hogar y a la familia","El hombre como principal proveedor económico","La maternidad y el matrimonio como prioridades","Roles tradicionales y diferenciados entre hombres y mujeres"],consumesContent:"Si",discovery:"Por el algoritmo",firstNetwork:"Instagram",contentType:"Estética o estilo de vida tradicional",algorithmConstant:"Si",repeatedInfluence:"Si"},
-{timestamp:"30/8/2026 17:16:40",age:"25 a 34 años",gender:"Hombre",frequency:"Diariamente",socialNetwork:"Instagram",knowsTradwife:"Si",associatedIdeas:["Una mujer dedicada principalmente al hogar y a la familia"],consumesContent:"Si",discovery:"Por el algoritmo",firstNetwork:"Instagram",contentType:"Contenido sobre cocina",algorithmConstant:"Si",repeatedInfluence:"Si"},
-{timestamp:"30/8/2026 17:20:41",age:"25 a 34 años",gender:"Hombre",frequency:"Diariamente",socialNetwork:"Instagram",knowsTradwife:"Si",associatedIdeas:["Una mujer dedicada principalmente al hogar y a la familia","El hombre como principal proveedor económico"],consumesContent:"Si",discovery:"Por una influencer/Youtuber",firstNetwork:"Instagram",contentType:"Mujeres dedicadas en exclusiva al hogar",algorithmConstant:"Si",repeatedInfluence:"Si"}
-];
+        <!-- KPI 2 -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Respuestas (N) Mod Clásico</div>
+            <div id="kpi-encuesta-2" class="text-3xl font-bold text-slate-800 mt-2">--</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+            <strong>Fuente:</strong> Hoja "(N) MOD CLASICO" (gid=2135692541)
+          </div>
+        </div>
 
-function countValues(array,key){const result={};array.forEach(item=>{const value=item[key];if(Array.isArray(value)){value.forEach(v=>result[v]=(result[v]||0)+1)}else{result[value]=(result[value]||0)+1}});return result}
-function percentageYes(array,key){return Math.round(array.filter(item=>item[key]==="Si").length/array.length*100)}
+        <!-- KPI 3 -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Última Tasa Informalidad (Arg)</div>
+            <div id="kpi-informalidad" class="text-3xl font-bold text-rose-600 mt-2">--</div>
+            <div id="kpi-informalidad-fecha" class="text-xs text-slate-500 mt-1">Fecha: --</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+            <strong>Fuente:</strong> Hoja "Tasa de informalidad (18-65 años) en hogares urbanos" (gid=0)
+          </div>
+        </div>
 
-document.getElementById("totalResponses").textContent=responses.length;
-document.getElementById("knowsTradwife").textContent=percentageYes(responses,"knowsTradwife")+"%";
-document.getElementById("consumesContent").textContent=percentageYes(responses,"consumesContent")+"%";
-document.getElementById("contentInfluence").textContent=percentageYes(responses,"repeatedInfluence")+"%";
+        <!-- KPI 4 -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Última Desocupación Jefas (Arg)</div>
+            <div id="kpi-desocupacion" class="text-3xl font-bold text-amber-600 mt-2">--</div>
+            <div id="kpi-desocupacion-fecha" class="text-xs text-slate-500 mt-1">Fecha: --</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+            <strong>Fuente:</strong> Hoja "Tasa de desocupación de jefas mujeres en hogares urbanos" (gid=2001819372)
+          </div>
+        </div>
 
-Chart.defaults.font.family="Arial, Helvetica, sans-serif";Chart.defaults.color="#746c66";
+      </div>
+    </section>
 
-const ageData=countValues(responses,"age");
-new Chart(document.getElementById("ageChart"),{type:"bar",data:{labels:Object.keys(ageData),datasets:[{label:"Cantidad de personas",data:Object.values(ageData),backgroundColor:["#8c4f3f","#c8875b","#d7b8a8"],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+    <!-- Sección 2: 4 Gráficos de Torta / Donut -->
+    <section>
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-slate-900">2. Representaciones y Percepciones del Movimiento (Gráficos de Torta)</h2>
+        <p class="text-xs text-slate-500">Distribuciones categóricas obtenidas de las encuestas directas.</p>
+      </div>
 
-const knowledgeData=countValues(responses,"knowsTradwife");
-new Chart(document.getElementById("knowledgeChart"),{type:"doughnut",data:{labels:Object.keys(knowledgeData),datasets:[{data:Object.values(knowledgeData),backgroundColor:["#8c4f3f","#d7b8a8","#c8875b"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}},cutout:"65%"}});
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-const discoveryData=countValues(responses,"discovery");
-new Chart(document.getElementById("discoveryChart"),{type:"bar",data:{labels:Object.keys(discoveryData),datasets:[{label:"Cantidad de respuestas",data:Object.values(discoveryData),backgroundColor:["#c8875b","#8c4f3f","#d7b8a8"],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{precision:0}}}}});
+        <!-- Torta 1 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-semibold text-slate-900 text-sm sm:text-base mb-1">
+              ¿Qué representa el auge de los roles tradicionales en redes?
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Evaluación de impactos sociopolíticos según los encuestados.</p>
+            <div class="relative w-full h-64 flex items-center justify-center">
+              <canvas id="chartAugeTrad"></canvas>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between items-center">
+            <span><strong>Fuente:</strong> (N) MOD CLASICO (gid=2135692541)</span>
+            <span id="label-count-auge" class="font-mono bg-slate-100 px-2 py-0.5 rounded">N = 0</span>
+          </div>
+        </div>
 
-const algorithmYes=responses.filter(item=>item.algorithmConstant==="Si").length;
-const repeatedInfluenceYes=responses.filter(item=>item.repeatedInfluence==="Si").length;
-new Chart(document.getElementById("influenceChart"),{type:"bar",data:{labels:["Los algoritmos pueden repetir contenidos","La repetición puede influir en opiniones"],datasets:[{label:"Personas que respondieron Sí",data:[algorithmYes,repeatedInfluenceYes],backgroundColor:["#8c4f3f","#c8875b"],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:responses.length,ticks:{precision:0}}}}});
-</script>
+        <!-- Torta 2 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-semibold text-slate-900 text-sm sm:text-base mb-1">
+              ¿Sabés qué es una Trad Wife?
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Nivel de conocimiento previo del término y fenómeno en redes.</p>
+            <div class="relative w-full h-64 flex items-center justify-center">
+              <canvas id="chartConocimientoTrad"></canvas>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between items-center">
+            <span><strong>Fuente:</strong> MODO CLÁSICO (gid=950326911)</span>
+            <span id="label-count-conocimiento" class="font-mono bg-slate-100 px-2 py-0.5 rounded">N = 0</span>
+          </div>
+        </div>
+
+        <!-- Torta 3 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-semibold text-slate-900 text-sm sm:text-base mb-1">
+              ¿Cómo conociste el contenido Trad Wife?
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Mecanismo de difusión (rol del algoritmo vs. recomendación).</p>
+            <div class="relative w-full h-64 flex items-center justify-center">
+              <canvas id="chartComoConocio"></canvas>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between items-center">
+            <span><strong>Fuente:</strong> MODO CLÁSICO (gid=950326911)</span>
+            <span id="label-count-conocio" class="font-mono bg-slate-100 px-2 py-0.5 rounded">N = 0</span>
+          </div>
+        </div>
+
+        <!-- Torta 4 -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-semibold text-slate-900 text-sm sm:text-base mb-1">
+              Frecuencia de exposición a creadoras Tradwife
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Habitualidad con que las personas cruzan este contenido en video/reels.</p>
+            <div class="relative w-full h-64 flex items-center justify-center">
+              <canvas id="chartFrecuenciaTrad"></canvas>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex justify-between items-center">
+            <span><strong>Fuente:</strong> (N) MOD CLASICO (gid=2135692541)</span>
+            <span id="label-count-frecuencia" class="font-mono bg-slate-100 px-2 py-0.5 rounded">N = 0</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sección 3: Contexto Macroeconómico de Hogares Urbanos -->
+    <section>
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-slate-900">3. Contexto Estructural: Informalidad y Desocupación en Hogares Urbanos</h2>
+        <p class="text-xs text-slate-500">Contraste temporal entre la vulnerabilidad laboral y la idealización del hogar tradicional.</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="relative w-full h-80">
+          <canvas id="chartContextoHistorico"></canvas>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap justify-between text-xs text-slate-500 gap-2">
+          <span><strong>Fuentes cruzadas:</strong> Hoja "Tasa de informalidad (18-65 años)" (gid=0) y Hoja "Tasa de desocupación de jefas mujeres" (gid=2001819372).</span>
+          <span id="label-count-historico" class="font-mono bg-slate-100 px-2 py-0.5 rounded">Series temporales</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    Dashboard analítico construido con PapaParse & Chart.js — Información directa desde Google Sheets
+  </footer>
+
+  <script>
+    // IDs de las cuatro hojas suministradas en el spreadsheet
+    const BASE_URL = 'https://docs.google.com/spreadsheets/d/1xmI4m8-JsDaZhZ2waZ_7wjlok-tvl55Fr7lCkUA80Nc/export?format=csv';
+    const GIDS = {
+      informalidad: '0',
+      desocupacion: '2001819372',
+      modoClasico: '950326911',
+      nModClasico: '2135692541'
+    };
+
+    // Paleta cromática coordinada para los gráficos
+    const palette = [
+      '#e11d48', '#f43f5e', '#fb7185', '#fda4af', 
+      '#f59e0b', '#fbbf24', '#0284c7', '#38bdf8', '#94a3b8'
+    ];
+
+    async function fetchCSV(gid) {
+      const url = `${BASE_URL}&gid=${gid}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error(`Error en fetch para gid=${gid}: HTTP ${resp.status}`);
+      }
+      const csvText = await resp.text();
+      return new Promise((resolve) => {
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data)
+        });
+      });
+    }
+
+    // Cuenta frecuencias de respuestas categóricas limpiando espacios
+    function countFrequencies(data, columnName) {
+      const counts = {};
+      data.forEach(row => {
+        let val = row[columnName];
+        if (val !== undefined && val !== null) {
+          val = String(val).trim();
+          if (val.length > 0) {
+            counts[val] = (counts[val] || 0) + 1;
+          }
+        }
+      });
+      return counts;
+    }
+
+    function createPieChart(ctxId, counts, title, labelCountId) {
+      const labels = Object.keys(counts);
+      const dataValues = Object.values(counts);
+      const total = dataValues.reduce((a, b) => a + b, 0);
+
+      if (labelCountId) {
+        document.getElementById(labelCountId).textContent = `N = ${total} respuestas`;
+      }
+
+      const ctx = document.getElementById(ctxId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: palette.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed;
+                  const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                  return ` ${context.label}: ${val} (${pct}%)`;
+                }
+              }
+            }
+          },
+          cutout: '58%'
+        }
+      });
+    }
+
+    async function initDashboard() {
+      try {
+        // Carga en paralelo de las 4 fuentes declaradas
+        const [rawInformalidad, rawDesocupacion, rawModoClasico, rawNModClasico] = await Promise.all([
+          fetchCSV(GIDS.informalidad),
+          fetchCSV(GIDS.desocupacion),
+          fetchCSV(GIDS.modoClasico),
+          fetchCSV(GIDS.nModClasico)
+        ]);
+
+        // 1. KPI Encuestas
+        document.getElementById('kpi-encuesta-1').textContent = rawModoClasico.length;
+        document.getElementById('kpi-encuesta-2').textContent = rawNModClasico.length;
+
+        // 2. KPI Indicadores Macroeconómicos (Tomando último registro de "Argentina")
+        if (rawInformalidad.length > 0) {
+          const lastInf = rawInformalidad[rawInformalidad.length - 1];
+          document.getElementById('kpi-informalidad').textContent = lastInf['Argentina'] || '--';
+          document.getElementById('kpi-informalidad-fecha').textContent = `Período: ${lastInf['Fecha'] || 'N/D'}`;
+        }
+        if (rawDesocupacion.length > 0) {
+          const lastDes = rawDesocupacion[rawDesocupacion.length - 1];
+          document.getElementById('kpi-desocupacion').textContent = lastDes['Argentina'] || '--';
+          document.getElementById('kpi-desocupacion-fecha').textContent = `Período: ${lastDes['Fecha'] || 'N/D'}`;
+        }
+
+        // 3. Gráfico de Torta 1: ¿Qué representa el auge de los roles de género tradicionales? (Hoja N MOD CLASICO)
+        // Buscamos dinámicamente la columna que contiene el texto de la pregunta 8
+        const colAuge = Object.keys(rawNModClasico[0] || {}).find(k => k.includes('representa principalmente')) || 
+                        '8. ¿Considerás que el auge de los roles de género tradicionales promovidos en redes sociales representa principalmente... (Seleccioná una sola opción):';
+        const freqAuge = countFrequencies(rawNModClasico, colAuge);
+        createPieChart('chartAugeTrad', freqAuge, 'Percepción del auge de roles', 'label-count-auge');
+
+        // 4. Gráfico de Torta 2: ¿Sabes lo qué es una Trad Wife? (Hoja MODO CLASICO)
+        const colSabes = Object.keys(rawModoClasico[0] || {}).find(k => k.toLowerCase().includes('sabes lo qué es') || k.includes('5 -')) || 
+                         '5 - ¿Sabes lo qué es una Trad Wife?';
+        const freqSabes = countFrequencies(rawModoClasico, colSabes);
+        createPieChart('chartConocimientoTrad', freqSabes, 'Conocimiento Trad Wife', 'label-count-conocimiento');
+
+        // 5. Gráfico de Torta 3: ¿Cómo conociste este tipo de contenido? (Hoja MODO CLASICO)
+        const colComoConocio = Object.keys(rawModoClasico[0] || {}).find(k => k.toLowerCase().includes('cómo conociste') || k.includes('8 -')) || 
+                               '8 - Si en la anterior respuesta pusiste si ¿Cómo conociste este tipo de contenido?';
+        const freqComoConocio = countFrequencies(rawModoClasico, colComoConocio);
+        createPieChart('chartComoConocio', freqComoConocio, 'Canal de descubrimiento', 'label-count-conocio');
+
+        // 6. Gráfico de Torta 4: Frecuencia con que se cruzan con contenidos tradwife (Hoja N MOD CLASICO)
+        const colFrecuencia = Object.keys(rawNModClasico[0] || {}).find(k => k.includes('creadoras de estilo de vida') || k.includes('5.')) || 
+                              '5. ¿Con qué frecuencia visualizás o te cruzás con contenidos de creadoras de estilo de vida vinculadas al movimiento tradwife (esposas tradicionales)?';
+        const freqFrecuencia = countFrequencies(rawNModClasico, colFrecuencia);
+        createPieChart('chartFrecuenciaTrad', freqFrecuencia, 'Frecuencia de exposición', 'label-count-frecuencia');
+
+        // 7. Gráfico de Línea Contextual (Evolución histórica Argentina: Informalidad vs Desocupación)
+        const fechas = rawInformalidad.map(r => r['Fecha']).filter(Boolean);
+        const parsePct = (val) => val ? parseFloat(String(val).replace('%', '').trim()) : 0;
+        const dataInf = rawInformalidad.map(r => parsePct(r['Argentina']));
+        const dataDes = rawDesocupacion.map(r => parsePct(r['Argentina']));
+
+        document.getElementById('label-count-historico').textContent = `${fechas.length} períodos registrados`;
+
+        const ctxHist = document.getElementById('chartContextoHistorico').getContext('2d');
+        new Chart(ctxHist, {
+          type: 'line',
+          data: {
+            labels: fechas,
+            datasets: [
+              {
+                label: 'Tasa de Informalidad (18-65 años) - Total País',
+                data: dataInf,
+                borderColor: '#e11d48',
+                backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                tension: 0.25,
+                fill: true
+              },
+              {
+                label: 'Tasa de Desocupación en Jefas Mujeres - Total País',
+                data: dataDes,
+                borderColor: '#d97706',
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.25
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: (val) => val + '%'
+                }
+              }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              tooltip: {
+                callbacks: {
+                  label: (context) => ` ${context.dataset.label}: ${context.parsed.y}%`
+                }
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error('Error al procesar datos del dashboard:', err);
+        alert('Ocurrió un error al intentar cargar los datos desde Google Sheets. Verifique la consola.');
+      } finally {
+        // Ocultar pantalla de carga
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+          overlay.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.4s ease';
+          setTimeout(() => overlay.remove(), 400);
+        }
+      }
+    }
+
+    // Inicializar al cargar el DOM
+    window.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
 </body>
 </html>
