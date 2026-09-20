@@ -1,0 +1,854 @@
+HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tradwife y Tik tok - Dashboard de Datos</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PapaParse CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background-color: #FAF7F2;
+      color: #2D2A2E;
+    }
+    .font-sans-ui {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .badge-pastel-lila { background-color: #EADCF0; color: #5B3B6B; }
+    .badge-pastel-rosa { background-color: #FCE1EC; color: #8C3A62; }
+    .badge-pastel-celeste { background-color: #E1F0F8; color: #2C5E7A; }
+    .badge-pastel-beige { background-color: #F3EBDD; color: #6E583A; }
+    
+    .table-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+      background: #EADBCE;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <!-- OVERLAY DE CARGA -->
+  <div id="loadingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FAF7F2] transition-opacity duration-500">
+    <div class="w-16 h-16 border-4 border-[#D8BFD8] border-t-[#8C3A62] rounded-full animate-spin mb-4"></div>
+    <h2 class="text-2xl font-bold tracking-wide text-[#5B3B6B]">Procesando 75 encuestas e indicadores urbanos...</h2>
+    <p class="text-sm text-gray-500 mt-2 font-sans-ui">Sincronizando 4 hojas de datos</p>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="bg-white border border-[#EADBCE] rounded-xl shadow-sm p-6 sm:p-10 mb-8">
+      <div class="border-b border-[#F0E4D8] pb-6 mb-6 text-center sm:text-left">
+        <span class="inline-block px-3 py-1 mb-3 text-xs font-semibold rounded-full badge-pastel-lila font-sans-ui uppercase tracking-wider">
+          Investigación de datos
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-[#2B232D] mb-4">
+          Tradwife y Tik tok
+        </h1>
+        <p class="text-lg sm:text-xl text-gray-700 leading-relaxed max-w-5xl">
+          Con el surgimiento de los valores tradicionales y el auge del fenómeno Tradwife en las redes sociales en Estados Unidos, este trabajo propone abordar el problema enfocándose en los discursos conservadores, entendiéndolos como un espacio en donde se reivindican los roles de género, la división tradicional de tareas dentro de la familia y el cuestionamiento sobre derechos democráticos consolidado por siglos de lucha social. En este contexto, buscamos analizar cómo se construye y representa la idea de “mujer tradicional” en las redes sociales, qué narrativas circulan en torno a la familia y qué lugar ocupa la mujer dentro de este modelo. A partir de eso, nos preguntamos: ¿qué significa ser una mujer tradicional en el siglo XXI y cómo influyen las redes sociales en la difusión y resignificación de estos roles de género?
+        </p>
+      </div>
+
+      <!-- AUTORAS Y FUENTE -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 font-sans-ui">
+        <div>
+          <span class="text-xs uppercase tracking-widest text-gray-400 font-bold block mb-1">Integrantes de la investigación</span>
+          <div class="flex flex-wrap gap-2 text-sm font-medium text-gray-700">
+            <span class="px-3 py-1 rounded-md bg-[#FAF0E1] border border-[#EADBCE]">CLARA SEQUEIRA</span>
+            <span class="px-3 py-1 rounded-md bg-[#FCE1EC] border border-[#F5C7DB]">NICOLE MORENO</span>
+            <span class="px-3 py-1 rounded-md bg-[#EADCF0] border border-[#DEC4E7]">ERIKA JOHNSON</span>
+            <span class="px-3 py-1 rounded-md bg-[#E1F0F8] border border-[#CDE5F2]">VALENTINA AILÉN ACEVEDO</span>
+          </div>
+        </div>
+        <div id="sourceStatusContainer" class="text-xs text-right font-sans-ui text-gray-500">
+          <span id="sourceBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium badge-pastel-beige">
+            Base de datos verificada (75 encuestados)
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN ENTRE 3 PESTAÑAS ESPECÍFICAS -->
+    <div class="flex flex-wrap border-b border-[#EADBCE] mb-8 font-sans-ui gap-2">
+      <button id="tabBtn1" onclick="switchTab('tab1')" class="px-5 py-3 font-semibold text-sm sm:text-base border-b-2 border-[#8C3A62] text-[#8C3A62] transition-colors focus:outline-none">
+        1. Tasa de informalidad (18 a 65 años) en hogares urbanos
+      </button>
+      <button id="tabBtn2" onclick="switchTab('tab2')" class="px-5 py-3 font-semibold text-sm sm:text-base border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition-colors focus:outline-none">
+        2. Tasa de desocupación de jefas mujeres en hogares urbanos
+      </button>
+      <button id="tabBtn3" onclick="switchTab('tab3')" class="px-5 py-3 font-semibold text-sm sm:text-base border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition-colors focus:outline-none">
+        3. Encuestas tradwife (Percepción y redes)
+      </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PESTAÑA 1: TASA DE INFORMALIDAD (HOJA 1, gid=1708020263) -->
+    <!-- ========================================================================= -->
+    <main id="tab1" class="space-y-8">
+      
+      <!-- KPIs ESPECÍFICOS INFORMALIDAD -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Promedio Nacional</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-beige font-sans-ui">gid=1708020263</span>
+          </div>
+          <div class="text-3xl font-bold text-[#8C3A62]">30.25%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Media nacional de informalidad (4 trimestres analizados)</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Picos Máximos</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-rosa font-sans-ui">NOA</span>
+          </div>
+          <div class="text-3xl font-bold text-[#5B3B6B]">49%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Registrado en Salta (2019-10) y Santiago del Estero (2020-01)</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Valores Menores</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-celeste font-sans-ui">Patagonia</span>
+          </div>
+          <div class="text-3xl font-bold text-[#2C5E7A]">0% - 10%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Tierra del Fuego (mínimo histórico 0% en 2020-07)</p>
+        </div>
+      </section>
+
+      <!-- GRÁFICO INTERACTIVO HOJA 1 -->
+      <section class="bg-white rounded-xl border border-[#EADBCE] shadow-sm p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-[#F0E4D8] gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">Evolución de la Tasa de Informalidad (18-65 años)</h2>
+            <p class="text-sm text-gray-500 font-sans-ui">
+              Hogares urbanos. Comparación temporal para las 24 jurisdicciones censales.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 font-sans-ui">
+            <label for="jurisdictionSelect1" class="text-xs font-semibold text-gray-600">Provincia:</label>
+            <select id="jurisdictionSelect1" onchange="updateInformalidadChart()" class="bg-[#FAF7F2] border border-[#D8BFD8] text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#8C3A62] outline-none">
+            </select>
+          </div>
+        </div>
+
+        <div class="h-80 w-full mb-4">
+          <canvas id="informalidadChart"></canvas>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between text-xs text-gray-500 font-sans-ui pt-3 border-t border-gray-100 gap-2">
+          <span>Fuente: Hoja "Tasa de informalidad (18-65 años) en hogares urbanos" [gid=1708020263]</span>
+          <span class="bg-[#FAF0E1] text-[#6E583A] px-2 py-0.5 rounded">4 trimestres: 2019-10-01 al 2020-07-01</span>
+        </div>
+      </section>
+
+      <!-- TABLA DETALLADA DE LA HOJA 1 -->
+      <section class="bg-white rounded-xl border border-[#EADBCE] shadow-sm p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Registro Completo por Jurisdicción (Hoja 1)</h3>
+        <div class="overflow-x-auto table-container">
+          <table class="min-w-full text-xs text-left font-sans-ui border-collapse" id="informalidadTable">
+            <!-- Cargada por JS -->
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- PESTAÑA 2: TASA DE DESOCUPACIÓN DE JEFAS MUJERES (HOJA 2, gid=422672316) -->
+    <!-- ========================================================================= -->
+    <main id="tab2" class="space-y-8 hidden">
+      
+      <!-- KPIs ESPECÍFICOS DESOCUPACIÓN -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Promedio Nacional</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-rosa font-sans-ui">gid=422672316</span>
+          </div>
+          <div class="text-3xl font-bold text-[#8C3A62]">8.00%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Tasa de desocupación femenina promedio país</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Pico Máximo Registrado</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-lila font-sans-ui">Córdoba y Santa Fe</span>
+          </div>
+          <div class="text-3xl font-bold text-[#5B3B6B]">17%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Registrado durante el trimestre 2020-04-01</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Registro CABA / Bs As</span>
+            <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-celeste font-sans-ui">Área Metropolitana</span>
+          </div>
+          <div class="text-3xl font-bold text-[#2C5E7A]">4% - 13%</div>
+          <p class="text-xs text-gray-500 mt-1 font-sans-ui">Buenos Aires registró un pico del 13% en 2020-07-01</p>
+        </div>
+      </section>
+
+      <!-- GRÁFICO INTERACTIVO HOJA 2 -->
+      <section class="bg-white rounded-xl border border-[#EADBCE] shadow-sm p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-[#F0E4D8] gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">Evolución de la Desocupación en Jefas Mujeres</h2>
+            <p class="text-sm text-gray-500 font-sans-ui">
+              Hogares urbanos. Mide desocupación específica en mujeres cabeza de hogar.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 font-sans-ui">
+            <label for="jurisdictionSelect2" class="text-xs font-semibold text-gray-600">Provincia:</label>
+            <select id="jurisdictionSelect2" onchange="updateDesocupacionChart()" class="bg-[#FAF7F2] border border-[#D8BFD8] text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#8C3A62] outline-none">
+            </select>
+          </div>
+        </div>
+
+        <div class="h-80 w-full mb-4">
+          <canvas id="desocupacionChart"></canvas>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between text-xs text-gray-500 font-sans-ui pt-3 border-t border-gray-100 gap-2">
+          <span>Fuente: Hoja "Tasa de desocupación de jefas mujeres en hogares urbanos" [gid=422672316]</span>
+          <span class="bg-[#FAF0E1] text-[#6E583A] px-2 py-0.5 rounded">Período: 2019-10-01 a 2020-07-01</span>
+        </div>
+      </section>
+
+      <!-- TABLA DETALLADA DE LA HOJA 2 -->
+      <section class="bg-white rounded-xl border border-[#EADBCE] shadow-sm p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Registro Completo por Jurisdicción (Hoja 2)</h3>
+        <div class="overflow-x-auto table-container">
+          <table class="min-w-full text-xs text-left font-sans-ui border-collapse" id="desocupacionTable">
+            <!-- Cargada por JS -->
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- PESTAÑA 3: ENCUESTAS TRADWIFE (HOJA 3: gid=713105282 + HOJA 4: gid=934424645) -->
+    <!-- ========================================================================= -->
+    <main id="tab3" class="space-y-8 hidden">
+      
+      <!-- ENCABEZADO Y FICHA MUESTRAL (75 CASOS) -->
+      <div class="bg-[#FAF0E1] border border-[#EADBCE] rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-[#6E583A]">Resultados Consolidados de Encuestas (75 Personas)</h2>
+          <p class="text-sm text-gray-700 font-sans-ui mt-1">
+            Composición muestral: <strong>68 respuestas</strong> en Hoja 3 (gid=713105282) y <strong>7 respuestas</strong> en Hoja 4 "Nicky" (gid=934424645).
+          </p>
+        </div>
+        <div class="flex gap-2 font-sans-ui">
+          <span class="badge-pastel-lila px-3 py-1 rounded text-xs font-bold">Hoja 3: 68 casos</span>
+          <span class="badge-pastel-rosa px-3 py-1 rounded text-xs font-bold">Hoja 4: 7 casos</span>
+        </div>
+      </div>
+
+      <!-- DEMOGRAFÍA DE LAS 75 ENCUESTAS -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800 text-lg">Distribución por Género (N=75)</h3>
+            <span class="text-xs font-sans-ui badge-pastel-lila px-2 py-0.5 rounded">Hojas 3 y 4</span>
+          </div>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="genderChart"></canvas>
+          </div>
+          <p class="text-xs text-gray-500 mt-4 text-center font-sans-ui">44 Varones/Hombres, 30 Mujeres, 1 Género fluido.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800 text-lg">Distribución por Edad (N=75)</h3>
+            <span class="text-xs font-sans-ui badge-pastel-rosa px-2 py-0.5 rounded">Hojas 3 y 4</span>
+          </div>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="ageChart"></canvas>
+          </div>
+          <p class="text-xs text-gray-500 mt-4 text-center font-sans-ui">32 en 25-34 años, 31 en 18-24 años, 6 en 35-44 años, 5 en 45+ años, 1 menor de 18.</p>
+        </div>
+      </section>
+
+      <!-- 4 GRÁFICOS DE TORTA / DOUGHNUT TEMÁTICOS -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Torta 1: Auge de Roles Tradicionales (Hoja 4) -->
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Auge Tradwife</span>
+              <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-rosa font-sans-ui">Hoja 4</span>
+            </div>
+            <h4 class="font-bold text-gray-800 text-sm mb-1">¿Qué representa el movimiento?</h4>
+            <p class="text-[11px] text-gray-500 mb-2 font-sans-ui">Derechos, marketing o libertad</p>
+          </div>
+          <div class="h-48 flex items-center justify-center">
+            <canvas id="tradwifeMeaningChart"></canvas>
+          </div>
+          <p class="text-[10px] text-gray-400 text-center mt-2 font-sans-ui">Fuente: Encuesta Nicky (gid=934424645)</p>
+        </div>
+
+        <!-- Torta 2: Representación Real de la Familia (Hoja 3) -->
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Vida Familiar</span>
+              <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-celeste font-sans-ui">Hoja 3 (P21)</span>
+            </div>
+            <h4 class="font-bold text-gray-800 text-sm mb-1">¿Muestran una imagen real?</h4>
+            <p class="text-[11px] text-gray-500 mb-2 font-sans-ui">Verosimilitud en plataformas</p>
+          </div>
+          <div class="h-48 flex items-center justify-center">
+            <canvas id="realRepresentationChart"></canvas>
+          </div>
+          <p class="text-[10px] text-gray-400 text-center mt-2 font-sans-ui">Fuente: Hoja 3 (gid=713105282)</p>
+        </div>
+
+        <!-- Torta 3: Modificación de Roles por Redes (Hoja 3) -->
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Roles de Género</span>
+              <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-lila font-sans-ui">Hoja 3 (P25)</span>
+            </div>
+            <h4 class="font-bold text-gray-800 text-sm mb-1">¿Están modificando roles?</h4>
+            <p class="text-[11px] text-gray-500 mb-2 font-sans-ui">Impacto cultural de redes</p>
+          </div>
+          <div class="h-48 flex items-center justify-center">
+            <canvas id="genderModificationChart"></canvas>
+          </div>
+          <p class="text-[10px] text-gray-400 text-center mt-2 font-sans-ui">Fuente: Hoja 3 (gid=713105282)</p>
+        </div>
+
+        <!-- Torta 4: Tono con que se presentan (Hoja 3) -->
+        <div class="bg-white p-5 rounded-xl border border-[#EADBCE] shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400 font-sans-ui">Discurso Digital</span>
+              <span class="text-[11px] px-2 py-0.5 rounded badge-pastel-beige font-sans-ui">Hoja 3 (P20)</span>
+            </div>
+            <h4 class="font-bold text-gray-800 text-sm mb-1">¿Cómo suelen presentarse?</h4>
+            <p class="text-[11px] text-gray-500 mb-2 font-sans-ui">Percepción del tono estético</p>
+          </div>
+          <div class="h-48 flex items-center justify-center">
+            <canvas id="tonePresentationChart"></canvas>
+          </div>
+          <p class="text-[10px] text-gray-400 text-center mt-2 font-sans-ui">Fuente: Hoja 3 (gid=713105282)</p>
+        </div>
+
+      </section>
+
+      <!-- INDICADORES CUANTITATIVOS DE ALGORITMOS Y ELECCIÓN -->
+      <section class="bg-white p-6 sm:p-8 rounded-xl border border-[#EADBCE] shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-[#F0E4D8] pb-3">
+          <div>
+            <h3 class="text-xl font-bold text-gray-800">Acuerdos sobre Libertad de Elección y Algoritmos (Hoja 3)</h3>
+            <p class="text-xs text-gray-500 font-sans-ui">Porcentajes directos sobre 68 respondientes de la Hoja 3</p>
+          </div>
+          <span class="text-xs font-sans-ui badge-pastel-celeste px-2.5 py-1 rounded">gid=713105282</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm font-sans-ui">
+          <div class="p-4 bg-[#FAF7F2] rounded-lg border border-[#EADBCE]">
+            <span class="text-xs text-gray-500 block mb-1">P11 - Libre Elección</span>
+            <div class="text-2xl font-bold text-[#8C3A62]">94.1%</div>
+            <p class="text-xs text-gray-600 mt-1">Acuerdo absoluto con poder elegir libremente dedicarse al trabajo o al hogar.</p>
+          </div>
+          <div class="p-4 bg-[#FAF7F2] rounded-lg border border-[#EADBCE]">
+            <span class="text-xs text-gray-500 block mb-1">P17 - Elección vs Imposición</span>
+            <div class="text-2xl font-bold text-[#8C3A62]">92.6%</div>
+            <p class="text-xs text-gray-600 mt-1">Diferencian claramente entre elegir el estilo tradicional y creer que todas deben hacerlo.</p>
+          </div>
+          <div class="p-4 bg-[#FAF7F2] rounded-lg border border-[#EADBCE]">
+            <span class="text-xs text-gray-500 block mb-1">P18 - Repetición Algorítmica</span>
+            <div class="text-2xl font-bold text-[#5B3B6B]">97.1%</div>
+            <p class="text-xs text-gray-600 mt-1">Confirmaron que los algoritmos muestran reiteradamente un mismo tema.</p>
+          </div>
+          <div class="p-4 bg-[#FAF7F2] rounded-lg border border-[#EADBCE]">
+            <span class="text-xs text-gray-500 block mb-1">P19 - Influencia en Opiniones</span>
+            <div class="text-2xl font-bold text-[#2C5E7A]">95.6%</div>
+            <p class="text-xs text-gray-600 mt-1">Afirmaron que la exposición reiterada a un tipo de contenido influye en las opiniones.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- DESGLOSE CUALITATIVO Y TEXTUAL -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Columna 1: Ideas asociadas (Hoja 3) -->
+        <div class="bg-white p-6 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-4 border-b border-[#F0E4D8] pb-3">
+            <h3 class="font-bold text-gray-800 text-base">Ideas asociadas a las Tradwife</h3>
+            <span class="text-xs font-sans-ui badge-pastel-lila px-2 py-0.5 rounded">P6 (Hoja 3)</span>
+          </div>
+          <ul class="space-y-2.5 text-xs text-gray-700 font-sans-ui max-h-96 overflow-y-auto pr-1" id="associatedIdeasContainer">
+            <!-- Rellenado por JS -->
+          </ul>
+        </div>
+
+        <!-- Columna 2: Rasgos de la "Mujer Ideal" en Redes (Hoja 3) -->
+        <div class="bg-white p-6 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-4 border-b border-[#F0E4D8] pb-3">
+            <h3 class="font-bold text-gray-800 text-base">Rasgos de "Mujer Ideal" en Redes</h3>
+            <span class="text-xs font-sans-ui badge-pastel-rosa px-2 py-0.5 rounded">P22 (Hoja 3)</span>
+          </div>
+          <ul class="space-y-2.5 text-xs text-gray-700 font-sans-ui max-h-96 overflow-y-auto pr-1" id="idealTraitsContainer">
+            <!-- Rellenado por JS -->
+          </ul>
+        </div>
+
+        <!-- Columna 3: Definición textual propia (Hoja 4) -->
+        <div class="bg-white p-6 rounded-xl border border-[#EADBCE] shadow-sm">
+          <div class="flex items-center justify-between mb-4 border-b border-[#F0E4D8] pb-3">
+            <h3 class="font-bold text-gray-800 text-base">Definiciones Textuales (Hoja 4)</h3>
+            <span class="text-xs font-sans-ui badge-pastel-beige px-2 py-0.5 rounded">P9 (Nicky)</span>
+          </div>
+          <div class="space-y-3 max-h-96 overflow-y-auto pr-1" id="textualDefinitionsContainer">
+            <!-- Rellenado por JS -->
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="mt-12 text-center text-xs text-gray-500 border-t border-[#EADBCE] pt-6 font-sans-ui">
+      <p>Dashboard de datos para la investigación "Tradwife y Tik tok".</p>
+      <p class="mt-1">Fuentes: Hojas gid=1708020263, gid=422672316, gid=713105282 y gid=934424645. Total: 75 encuestados.</p>
+    </footer>
+
+  </div>
+
+  <!-- SCRIPT CON DATOS Y LÓGICA DE VISUALIZACIÓN -->
+  <script>
+    const pastelPalette = {
+      lila: '#D8BFD8',
+      lilaOscuro: '#9C7DA5',
+      rosa: '#FAD2E1',
+      rosaOscuro: '#C47B9B',
+      celeste: '#D0E8F2',
+      celesteOscuro: '#6EA0B8',
+      beige: '#FAF0E1',
+      beigeOscuro: '#B8A082',
+      grisBorde: '#E8DED1'
+    };
+
+    // DATOS DE INFORMALIDAD (HOJA 1)
+    const dataInformalidad = [
+      { Fecha: "2019-10-01", Argentina: "35%", "Ciudad Autónoma de Buenos Aires": "23%", "Buenos Aires": "37%", "Catamarca": "41%", "Córdoba": "42%", "Corrientes": "38%", "Chaco": "36%", "Chubut": "24%", "Entre Ríos": "32%", "Formosa": "32%", "Jujuy": "34%", "La Pampa": "25%", "La Rioja": "33%", "Mendoza": "39%", "Misiones": "33%", "Neuquén": "21%", "Río Negro": "22%", "Salta": "49%", "San Juan": "44%", "San Luis": "41%", "Santa Cruz": "19%", "Santa Fe": "30%", "Santiago del Estero": "48%", "Tucumán": "46%", "Tierra del Fuego": "10%" },
+      { Fecha: "2020-01-01", Argentina: "35%", "Ciudad Autónoma de Buenos Aires": "24%", "Buenos Aires": "37%", "Catamarca": "37%", "Córdoba": "38%", "Corrientes": "42%", "Chaco": "40%", "Chubut": "25%", "Entre Ríos": "31%", "Formosa": "42%", "Jujuy": "37%", "La Pampa": "20%", "La Rioja": "33%", "Mendoza": "37%", "Misiones": "33%", "Neuquén": "22%", "Río Negro": "22%", "Salta": "46%", "San Juan": "46%", "San Luis": "40%", "Santa Cruz": "19%", "Santa Fe": "34%", "Santiago del Estero": "49%", "Tucumán": "45%", "Tierra del Fuego": "9%" },
+      { Fecha: "2020-04-01", Argentina: "23%", "Ciudad Autónoma de Buenos Aires": "14%", "Buenos Aires": "22%", "Catamarca": "31%", "Córdoba": "31%", "Corrientes": "35%", "Chaco": "43%", "Chubut": "16%", "Entre Ríos": "23%", "Formosa": "31%", "Jujuy": "33%", "La Pampa": "16%", "La Rioja": "30%", "Mendoza": "31%", "Misiones": "28%", "Neuquén": "13%", "Río Negro": "20%", "Salta": "35%", "San Juan": "38%", "San Luis": "31%", "Santa Cruz": "11%", "Santa Fe": "23%", "Santiago del Estero": "40%", "Tucumán": "27%", "Tierra del Fuego": "9%" },
+      { Fecha: "2020-07-01", Argentina: "28%", "Ciudad Autónoma de Buenos Aires": "17%", "Buenos Aires": "27%", "Catamarca": "32%", "Córdoba": "35%", "Corrientes": "32%", "Chaco": "36%", "Chubut": "19%", "Entre Ríos": "26%", "Formosa": "31%", "Jujuy": "32%", "La Pampa": "23%", "La Rioja": "29%", "Mendoza": "41%", "Misiones": "34%", "Neuquén": "17%", "Río Negro": "19%", "Salta": "38%", "San Juan": "41%", "San Luis": "40%", "Santa Cruz": "11%", "Santa Fe": "27%", "Santiago del Estero": "44%", "Tucumán": "45%", "Tierra del Fuego": "0%" }
+    ];
+
+    // DATOS DE DESOCUPACIÓN DE JEFAS MUJERES (HOJA 2)
+    const dataDesocupacion = [
+      { Fecha: "2019-10-01", Argentina: "6%", "Ciudad Autónoma de Buenos Aires": "4%", "Buenos Aires": "7%", "Catamarca": "8%", "Córdoba": "7%", "Corrientes": "1%", "Chaco": "6%", "Chubut": "3%", "Entre Ríos": "6%", "Formosa": "3%", "Jujuy": "6%", "La Pampa": "8%", "La Rioja": "1%", "Mendoza": "4%", "Misiones": "1%", "Neuquén": "5%", "Río Negro": "2%", "Salta": "8%", "San Juan": "2%", "San Luis": "3%", "Santa Cruz": "5%", "Santa Fe": "4%", "Santiago del Estero": "4%", "Tucumán": "10%", "Tierra del Fuego": "6%" },
+      { Fecha: "2020-01-01", Argentina: "8%", "Ciudad Autónoma de Buenos Aires": "7%", "Buenos Aires": "8%", "Catamarca": "6%", "Córdoba": "13%", "Corrientes": "7%", "Chaco": "6%", "Chubut": "5%", "Entre Ríos": "5%", "Formosa": "5%", "Jujuy": "7%", "La Pampa": "11%", "La Rioja": "1%", "Mendoza": "6%", "Misiones": "0%", "Neuquén": "2%", "Río Negro": "2%", "Salta": "6%", "San Juan": "2%", "San Luis": "1%", "Santa Cruz": "1%", "Santa Fe": "9%", "Santiago del Estero": "4%", "Tucumán": "6%", "Tierra del Fuego": "7%" },
+      { Fecha: "2020-04-01", Argentina: "9%", "Ciudad Autónoma de Buenos Aires": "9%", "Buenos Aires": "8%", "Catamarca": "6%", "Córdoba": "17%", "Corrientes": "11%", "Chaco": "0%", "Chubut": "8%", "Entre Ríos": "8%", "Formosa": "1%", "Jujuy": "1%", "La Pampa": "2%", "La Rioja": "0%", "Mendoza": "14%", "Misiones": "0%", "Neuquén": "8%", "Río Negro": "2%", "Salta": "8%", "San Juan": "8%", "San Luis": "2%", "Santa Cruz": "3%", "Santa Fe": "17%", "Santiago del Estero": "1%", "Tucumán": "10%", "Tierra del Fuego": "13%" },
+      { Fecha: "2020-07-01", Argentina: "9%", "Ciudad Autónoma de Buenos Aires": "5%", "Buenos Aires": "13%", "Catamarca": "2%", "Córdoba": "12%", "Corrientes": "6%", "Chaco": "2%", "Chubut": "2%", "Entre Ríos": "8%", "Formosa": "3%", "Jujuy": "7%", "La Pampa": "8%", "La Rioja": "2%", "Mendoza": "7%", "Misiones": "7%", "Neuquén": "2%", "Río Negro": "1%", "Salta": "7%", "San Juan": "6%", "San Luis": "1%", "Santa Cruz": "0%", "Santa Fe": "5%", "Santiago del Estero": "0%", "Tucumán": "13%", "Tierra del Fuego": "0%" }
+    ];
+
+    // DATOS HOJA 4: ENCUESTA NICKY (gid=934424645) - 7 CASOS
+    const dataNicky = [
+      { edad: "18 a 24 años", genero: "Mujer", ocupacion: "Estudiante", p8_representa: "Un retroceso en los derechos y conquistas históricas de las mujeres.", p9_definicion: "Considero que se trata de una mujer que estudia, puede trabajar, y valerse por su propia cuenta sin la necesidad de un hombre" },
+      { edad: "25 a 34 años", genero: "Varón", ocupacion: "Trabajador/a en relación de dependencia", p8_representa: "No sabe / No contesta", p9_definicion: "Buenos valores" },
+      { edad: "25 a 34 años", genero: "Varón", ocupacion: "Trabajador/a independiente / Autónomo/a", p8_representa: "No sabe / No contesta", p9_definicion: "Con el mismo valor que un hombre" },
+      { edad: "35 a 45 años", genero: "Mujer", ocupacion: "Trabajador/a en relación de dependencia", p8_representa: "Una elección personal legítima dentro de la libertad individual.", p9_definicion: "Actualmente se puede ser una mujer tradicional dedicandote a tu familia pero a la vez continuar con tus propositos y metas personales." },
+      { edad: "25 a 34 años", genero: "Mujer", ocupacion: "Trabajador/a en relación de dependencia", p8_representa: "Un retroceso en los derechos y conquistas históricas de las mujeres.", p9_definicion: "El cuido de la familia y encargarse de ciertas tareas domésticas, aunque eso no significa que no pueda estudiar, trabajar o tener sus propias metas. Para mí, lo principal es que elija libremente el estilo de vida con el que se sienta identificada" },
+      { edad: "35 a 45 años", genero: "Varón", ocupacion: "Trabajador/a independiente / Autónomo/a", p8_representa: "Una estrategia de marketing o entretenimiento digital sin implicancias sociales reales.", p9_definicion: "La mujer tradicional hoy en dia es una mujer independente,inteligente y trabajadora." },
+      { edad: "25 a 34 años", genero: "Varón", ocupacion: "Trabajador/a independiente / Autónomo/a", p8_representa: "Una estrategia de marketing o entretenimiento digital sin implicancias sociales reales.", p9_definicion: "Una mujer tradicional es la que tiene el mismo derecho de opinión que un hombre" }
+    ];
+
+    // VARIABLES DE GRÁFICOS
+    let chartInformalidadInstance = null;
+    let chartDesocupacionInstance = null;
+    let chartsTab3 = {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initDashboard();
+    });
+
+    function initDashboard() {
+      setupJurisdictionSelectors();
+      renderInformalidadChart("Argentina");
+      renderDesocupacionChart("Argentina");
+      buildDataTable("informalidadTable", dataInformalidad);
+      buildDataTable("desocupacionTable", dataDesocupacion);
+      renderTab3Visuals();
+
+      setTimeout(() => {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.style.display = 'none', 500);
+      }, 300);
+    }
+
+    // CONTROL DE PESTAÑAS
+    function switchTab(tabId) {
+      ['tab1', 'tab2', 'tab3'].forEach((t, i) => {
+        const el = document.getElementById(t);
+        const btn = document.getElementById(`tabBtn${i + 1}`);
+        if (t === tabId) {
+          el.classList.remove('hidden');
+          btn.className = "px-5 py-3 font-semibold text-sm sm:text-base border-b-2 border-[#8C3A62] text-[#8C3A62] transition-colors focus:outline-none";
+        } else {
+          el.classList.add('hidden');
+          btn.className = "px-5 py-3 font-semibold text-sm sm:text-base border-b-2 border-transparent text-gray-500 hover:text-gray-800 transition-colors focus:outline-none";
+        }
+      });
+    }
+
+    // SELECTORES DE PROVINCIAS
+    function setupJurisdictionSelectors() {
+      const s1 = document.getElementById('jurisdictionSelect1');
+      const s2 = document.getElementById('jurisdictionSelect2');
+      s1.innerHTML = "";
+      s2.innerHTML = "";
+
+      const jurisdictions = Object.keys(dataInformalidad[0]).filter(k => k !== "Fecha");
+      jurisdictions.forEach(j => {
+        const opt1 = document.createElement('option');
+        opt1.value = j; opt1.textContent = j;
+        if (j === "Argentina") opt1.selected = true;
+        s1.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = j; opt2.textContent = j;
+        if (j === "Argentina") opt2.selected = true;
+        s2.appendChild(opt2);
+      });
+    }
+
+    // GRÁFICO INFORMALIDAD (HOJA 1)
+    function renderInformalidadChart(jur) {
+      const ctx = document.getElementById('informalidadChart').getContext('2d');
+      const labels = dataInformalidad.map(r => r.Fecha);
+      const data = dataInformalidad.map(r => parseFloat(r[jur].replace('%', '')));
+
+      if (chartInformalidadInstance) chartInformalidadInstance.destroy();
+
+      chartInformalidadInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `Tasa de Informalidad Urbana en ${jur} (%)`,
+            data: data,
+            borderColor: '#8C3A62',
+            backgroundColor: 'rgba(250, 210, 225, 0.45)',
+            borderWidth: 2.5,
+            tension: 0.25,
+            fill: true,
+            pointBackgroundColor: '#8C3A62',
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { font: { family: 'Times New Roman', size: 13 } } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => v + '%' }, grid: { color: '#F0E4D8' } },
+            x: { grid: { color: '#F5EBE1' } }
+          }
+        }
+      });
+    }
+
+    function updateInformalidadChart() {
+      const val = document.getElementById('jurisdictionSelect1').value;
+      renderInformalidadChart(val);
+    }
+
+    // GRÁFICO DESOCUPACIÓN (HOJA 2)
+    function renderDesocupacionChart(jur) {
+      const ctx = document.getElementById('desocupacionChart').getContext('2d');
+      const labels = dataDesocupacion.map(r => r.Fecha);
+      const data = dataDesocupacion.map(r => parseFloat(r[jur].replace('%', '')));
+
+      if (chartDesocupacionInstance) chartDesocupacionInstance.destroy();
+
+      chartDesocupacionInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `Desocupación Jefas Mujeres en ${jur} (%)`,
+            data: data,
+            borderColor: '#2C5E7A',
+            backgroundColor: 'rgba(208, 232, 242, 0.45)',
+            borderWidth: 2.5,
+            tension: 0.25,
+            fill: true,
+            pointBackgroundColor: '#2C5E7A',
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { font: { family: 'Times New Roman', size: 13 } } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => v + '%' }, grid: { color: '#F0E4D8' } },
+            x: { grid: { color: '#F5EBE1' } }
+          }
+        }
+      });
+    }
+
+    function updateDesocupacionChart() {
+      const val = document.getElementById('jurisdictionSelect2').value;
+      renderDesocupacionChart(val);
+    }
+
+    // GENERADOR DE TABLAS PARA HOJAS 1 Y 2
+    function buildDataTable(tableId, data) {
+      const table = document.getElementById(tableId);
+      table.innerHTML = "";
+      
+      const cols = Object.keys(data[0]);
+      
+      // Thead
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      trHead.className = "bg-[#FAF0E1] border-b border-[#EADBCE] text-gray-700 font-semibold";
+      cols.forEach(c => {
+        const th = document.createElement('th');
+        th.className = "py-2.5 px-3 whitespace-nowrap";
+        th.textContent = c;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+
+      // Tbody
+      const tbody = document.createElement('tbody');
+      data.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = idx % 2 === 0 ? "bg-white border-b border-gray-100 hover:bg-[#FAF7F2]" : "bg-[#FAF7F2] border-b border-gray-100 hover:bg-[#F3EBDD]";
+        cols.forEach(c => {
+          const td = document.createElement('td');
+          td.className = "py-2 px-3 whitespace-nowrap text-gray-800";
+          if (c === "Fecha") td.className += " font-bold text-[#8C3A62]";
+          td.textContent = row[c];
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    }
+
+    // =========================================================================
+    // RENDERIZADO VISUAL PESTAÑA 3 (75 ENCUESTADOS EN TOTAL)
+    // =========================================================================
+    function renderTab3Visuals() {
+      // 1. Género Total (N=75: 44 Varones/Hombres, 30 Mujeres, 1 Género fluido)
+      const ctxGender = document.getElementById('genderChart').getContext('2d');
+      chartsTab3.gender = new Chart(ctxGender, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hombres / Varones (58.7%)', 'Mujeres (40.0%)', 'Género fluido (1.3%)'],
+          datasets: [{
+            data: [44, 30, 1],
+            backgroundColor: [pastelPalette.celeste, pastelPalette.rosa, pastelPalette.lila],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman' } } } }
+        }
+      });
+
+      // 2. Edad Total (N=75: 32 en 25-34, 31 en 18-24, 6 en 35-44, 5 en 45+, 1 <18)
+      const ctxAge = document.getElementById('ageChart').getContext('2d');
+      chartsTab3.age = new Chart(ctxAge, {
+        type: 'doughnut',
+        data: {
+          labels: ['25 a 34 años (42.7%)', '18 a 24 años (41.3%)', '35 a 45 años (8.0%)', '45 años o más (6.7%)', 'Menos de 18 años (1.3%)'],
+          datasets: [{
+            data: [32, 31, 6, 5, 1],
+            backgroundColor: [pastelPalette.lila, pastelPalette.rosa, pastelPalette.beige, pastelPalette.celeste, '#E6DBDF'],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman', size: 11 } } } }
+        }
+      });
+
+      // 3. Torta: Auge de roles tradicionales (Hoja 4, N=7)
+      // 2 Retroceso, 2 Estrategia marketing, 2 No sabe / No contesta, 1 Elección personal
+      const ctxP8 = document.getElementById('tradwifeMeaningChart').getContext('2d');
+      chartsTab3.p8 = new Chart(ctxP8, {
+        type: 'pie',
+        data: {
+          labels: ['Estrategia de marketing (28.6%)', 'Retroceso en derechos (28.6%)', 'No sabe / No contesta (28.6%)', 'Elección personal legítima (14.3%)'],
+          datasets: [{
+            data: [2, 2, 2, 1],
+            backgroundColor: [pastelPalette.beigeOscuro, pastelPalette.rosaOscuro, pastelPalette.celesteOscuro, pastelPalette.lilaOscuro],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman', size: 10 } } } }
+        }
+      });
+
+      // 4. Torta: Representación real de la familia (Hoja 3, N=68)
+      // Mayormente no: 34 (50%), A veces: 16 (23.5%), Casi nunca: 12 (17.6%), No: 5 (7.4%), Siempre: 1 (1.5%)
+      const ctxP21 = document.getElementById('realRepresentationChart').getContext('2d');
+      chartsTab3.p21 = new Chart(ctxP21, {
+        type: 'doughnut',
+        data: {
+          labels: ['Mayormente no (50%)', 'A veces (23.5%)', 'Casi nunca (17.6%)', 'No (7.4%)', 'Siempre (1.5%)'],
+          datasets: [{
+            data: [34, 16, 12, 5, 1],
+            backgroundColor: [pastelPalette.rosa, pastelPalette.celeste, pastelPalette.lila, pastelPalette.beige, '#D0C4DF'],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman', size: 10 } } } }
+        }
+      });
+
+      // 5. Torta: ¿Modifican las redes los roles de género? (Hoja 3, N=68)
+      // Sí: 36 (52.9%), Tal vez: 29 (42.6%), No: 3 (4.4%)
+      const ctxP25 = document.getElementById('genderModificationChart').getContext('2d');
+      chartsTab3.p25 = new Chart(ctxP25, {
+        type: 'pie',
+        data: {
+          labels: ['Sí (52.9%)', 'Tal Vez (42.6%)', 'No (4.4%)'],
+          datasets: [{
+            data: [36, 29, 3],
+            backgroundColor: [pastelPalette.rosa, pastelPalette.lila, pastelPalette.celeste],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman', size: 10 } } } }
+        }
+      });
+
+      // 6. Torta: Cómo se presentan los estilos tradicionales en redes (Hoja 3, N=68)
+      // De forma positiva: 37 (54.4%), De forma neutral: 14 (20.6%), No estoy segura/o: 8 (11.8%), De forma negativa: 7 (10.3%), Otros: 2 (2.9%)
+      const ctxP20 = document.getElementById('tonePresentationChart').getContext('2d');
+      chartsTab3.p20 = new Chart(ctxP20, {
+        type: 'doughnut',
+        data: {
+          labels: ['De forma positiva (54.4%)', 'De forma neutral (20.6%)', 'No segura/o (11.8%)', 'De forma negativa (10.3%)', 'Otras respuestas (2.9%)'],
+          datasets: [{
+            data: [37, 14, 8, 7, 2],
+            backgroundColor: [pastelPalette.beige, pastelPalette.celeste, pastelPalette.lila, pastelPalette.rosa, '#D0C4DF'],
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Times New Roman', size: 10 } } } }
+        }
+      });
+
+      // Rellenar listas cualitativas
+      populateQualitativeContent();
+    }
+
+    function populateQualitativeContent() {
+      // 1. Ideas asociadas a las Tradwife (Hoja 3)
+      const ideasContainer = document.getElementById('associatedIdeasContainer');
+      ideasContainer.innerHTML = "";
+
+      const ideasData = [
+        { idea: "Una mujer dedicada principalmente al hogar y a la familia", count: 48 },
+        { idea: "El regreso de valores conservadores", count: 35 },
+        { idea: "El hombre como principal proveedor económico", count: 32 },
+        { idea: "Roles tradicionales y diferenciados entre hombres y mujeres", count: 28 },
+        { idea: "La maternidad y el matrimonio como prioridades", count: 25 },
+        { idea: "Críticas al feminismo y retroceso de las luchas de igualdad", count: 20 },
+        { idea: "Estrategias de lucro conservador / Radicalización de nicho (Menciones críticas)", count: 2 }
+      ];
+
+      ideasData.forEach(item => {
+        const li = document.createElement('li');
+        li.className = "p-2 rounded bg-[#FAF7F2] border border-[#EADBCE] flex items-center justify-between";
+        li.innerHTML = `<span>${item.idea}</span> <span class="badge-pastel-lila px-2 py-0.5 rounded text-[11px] font-bold font-sans-ui whitespace-nowrap ml-2">${item.count}</span>`;
+        ideasContainer.appendChild(li);
+      });
+
+      // 2. Rasgos de Mujer Ideal en Redes (Hoja 3, P22)
+      const idealContainer = document.getElementById('idealTraitsContainer');
+      idealContainer.innerHTML = "";
+
+      const traitsData = [
+        { trait: "Atractiva físicamente", count: 38 },
+        { trait: "Buena esposa", count: 28 },
+        { trait: "Buena madre", count: 25 },
+        { trait: "Responsable del cuidado del hogar", count: 24 },
+        { trait: "Ama de casa", count: 18 },
+        { trait: "Independiente económicamente", count: 8 },
+        { trait: "Profesional", count: 4 }
+      ];
+
+      traitsData.forEach(item => {
+        const li = document.createElement('li');
+        li.className = "p-2 rounded bg-[#FAF7F2] border border-[#EADBCE] flex items-center justify-between";
+        li.innerHTML = `<span>${item.trait}</span> <span class="badge-pastel-rosa px-2 py-0.5 rounded text-[11px] font-bold font-sans-ui whitespace-nowrap ml-2">${item.count}</span>`;
+        idealContainer.appendChild(li);
+      });
+
+      // 3. Definiciones Textuales (Hoja 4, P9)
+      const defContainer = document.getElementById('textualDefinitionsContainer');
+      defContainer.innerHTML = "";
+
+      dataNicky.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "p-2.5 rounded bg-[#FAF7F2] border border-[#EADBCE] text-xs";
+        card.innerHTML = `
+          <p class="italic text-gray-800 font-serif leading-relaxed">"${item.p9_definicion}"</p>
+          <div class="mt-1.5 text-[10px] font-sans-ui text-gray-500 flex flex-wrap items-center gap-1.5">
+            <span class="badge-pastel-beige px-1.5 py-0.5 rounded">${item.genero}</span>
+            <span class="badge-pastel-rosa px-1.5 py-0.5 rounded">${item.edad}</span>
+            <span class="text-gray-400">• ${item.ocupacion}</span>
+          </div>
+        `;
+        defContainer.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
